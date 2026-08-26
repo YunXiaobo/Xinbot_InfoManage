@@ -1,0 +1,6 @@
+name: InfoManage
+version: 0.0.1
+main: com.infomanage.InfoManagePlugin
+type: META_PLUGIN
+softdepend:
+  - XinVia

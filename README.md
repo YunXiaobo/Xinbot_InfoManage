@@ -10,21 +10,20 @@
 
 ## 安装
 
-1. 安装前置插件 [InfoManage](https://github.com/YunXiaobo/Xinbot_InfoManage)
+1. 安装前置插件 [InfoManage](https://github.com/huangdihd/XinVia)
 2. 将 InfoManage JAR 放入 Xinbot 的 `plugins` 文件夹。
 3. 启动一次 Xinbot，生成 `.\plugin\InfoManage`。
 4. 编辑 `config.conf`。
 5. 重载或重启 Xinbot。
 
 ## 配置文件
-
 `config.conf` 示例：
 
 ```
 #InfoManage plugin config - server connection info only (not player account info)
 #Wed Aug 26 15:42:36 CST 2026
-feed.maxEntries=500
-server.host=3c3u.org
+feed.maxEntris=500
+server.host=3c3uorg
 server.port=25565
 server.protocol=774
 title=服务器状态

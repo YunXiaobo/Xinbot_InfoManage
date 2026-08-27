@@ -10,7 +10,7 @@
 
 ## 安装
 
-1. 安装前置插件 [InfoManage](https://github.com/huangdihd/XinVia)
+1. 安装前置插件 [XinVia](https://github.com/huangdihd/XinVia)
 2. 将 InfoManage JAR 放入 Xinbot 的 `plugins` 文件夹。
 3. 启动一次 Xinbot，生成 `.\plugin\InfoManage`。
 4. 编辑 `config.conf`。

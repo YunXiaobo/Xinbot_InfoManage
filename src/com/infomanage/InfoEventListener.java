@@ -10,6 +10,8 @@ import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.Serverbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundLoginPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerChatPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.clientbound.ClientboundHelloPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xin.bbtt.mcbot.Bot;
 import xin.bbtt.mcbot.Utils;
 import xin.bbtt.mcbot.event.EventHandler;
@@ -25,6 +27,7 @@ import xin.bbtt.mcbot.events.SystemChatMessageEvent;
  * 事件监听器：把 Xinbot 高层事件转成 DataStore 的数据变更。
  */
 public class InfoEventListener implements Listener {
+    private static final Logger log = LoggerFactory.getLogger("InfoManage");
     private final DataStore store;
 
     private volatile long lastAuthAttempt = 0L;

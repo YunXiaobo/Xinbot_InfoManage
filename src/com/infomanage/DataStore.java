@@ -6,6 +6,8 @@ import com.google.gson.reflect.TypeToken;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.texture.Texture;
 import org.geysermc.mcprotocollib.auth.texture.TextureType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import xin.bbtt.mcbot.Bot;
 
 import java.io.BufferedWriter;
@@ -45,6 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *   - pinned.txt   置顶玩家列表（跨重启保留）
  */
 public class DataStore {
+    private static final Logger log = LoggerFactory.getLogger("InfoManage");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final DateTimeFormatter TS =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault());
@@ -92,8 +95,21 @@ public class DataStore {
             scheduler = s;
         }
         openLog();
-        s.scheduleWithFixedDelay(this::reconcile, 5, 5, TimeUnit.SECONDS);
-        s.scheduleWithFixedDelay(this::saveRegistryIfDirty, 10, 10, TimeUnit.SECONDS);
+        s.scheduleWithFixedDelay(() -> {
+            try {
+                reconcile();
+            } catch (Throwable t) {
+                // 调度任务抛出未捕获异常会永久终止周期执行，必须兜底
+                log.error("reconcile 异常", t);
+            }
+        }, 5, 5, TimeUnit.SECONDS);
+        s.scheduleWithFixedDelay(() -> {
+            try {
+                saveRegistryIfDirty();
+            } catch (Throwable t) {
+                log.error("saveRegistry 异常", t);
+            }
+        }, 10, 10, TimeUnit.SECONDS);
     }
 
     public void shutdown() {
@@ -175,12 +191,27 @@ public class DataStore {
             Texture skin = textures.get(TextureType.SKIN);
             if (skin != null) {
                 String url = skin.getURL();
-                if (url != null && !url.isEmpty()) return url;
+                if (isSafeUrl(url)) return url;
             }
         } catch (Exception ignore) {
             // 无皮肤或纹理解析失败
         }
         return null;
+    }
+
+    // 仅接受 http(s) URL，且不含引号/反斜杠/尖括号/空白等字符，
+    // 该 URL 会被前端拼进 CSS url("...")，必须杜绝样式注入
+    private static boolean isSafeUrl(String url) {
+        if (url == null || url.isEmpty() || url.length() > 512) return false;
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return false;
+        for (int i = 0; i < url.length(); i++) {
+            char c = url.charAt(i);
+            if (c <= 0x20 || c == 0x7F || c == '"' || c == '\'' || c == '\\'
+                    || c == '<' || c == '>') {
+                return false;
+            }
+        }
+        return true;
     }
 
     // ---------------- 事件处理 ----------------

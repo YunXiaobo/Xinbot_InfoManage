@@ -89,6 +89,11 @@ public class WebServer {
     private final class PinHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange ex) throws IOException {
+            if (!sameOrigin(ex)) {
+                send(ex, 403, "text/plain; charset=utf-8",
+                        "forbidden".getBytes(StandardCharsets.UTF_8));
+                return;
+            }
             if (!"POST".equalsIgnoreCase(ex.getRequestMethod())) {
                 send(ex, 405, "text/plain; charset=utf-8",
                         "method not allowed".getBytes(StandardCharsets.UTF_8));
@@ -139,9 +144,27 @@ public class WebServer {
         }
     }
 
+    private static final int MAX_BODY_BYTES = 4096;
+
+    // CSRF 防护：浏览器跨站请求会携带与站点不同的 Origin 头，校验其与 Host 一致
+    private boolean sameOrigin(HttpExchange ex) {
+        String origin = ex.getRequestHeaders().getFirst("Origin");
+        if (origin == null || origin.isBlank()) return true; // 非浏览器客户端通常不带 Origin
+        String host = ex.getRequestHeaders().getFirst("Host");
+        if (host == null || host.isBlank()) return false;
+        int scheme = origin.indexOf("://");
+        if (scheme <= 0) return false;
+        String lower = origin.substring(0, scheme).toLowerCase();
+        if (!lower.equals("http") && !lower.equals("https")) return false;
+        return origin.substring(scheme + 3).equalsIgnoreCase(host);
+    }
+
     private Map<String, String> parseForm(HttpExchange ex) throws IOException {
         Map<String, String> out = new LinkedHashMap<>();
-        byte[] raw = ex.getRequestBody().readAllBytes();
+        byte[] raw = ex.getRequestBody().readNBytes(MAX_BODY_BYTES + 1);
+        if (raw.length > MAX_BODY_BYTES) {
+            return out; // 超过长度限制，按空表单处理
+        }
         String body = new String(raw, StandardCharsets.UTF_8);
         for (String kv : body.split("&")) {
             int i = kv.indexOf('=');
@@ -209,6 +232,7 @@ public class WebServer {
   <div class="logo" id="title">服务器状态</div>
   <div class="stats">
     <span>在线<b id="onlineCount">0</b></span>
+    <span>注册<b id="totalPlayers">0</b></span>
   </div>
 </header>
 <main>

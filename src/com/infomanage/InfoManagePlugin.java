@@ -65,16 +65,21 @@ public class InfoManagePlugin implements MetaPlugin {
             store.start();
             this.listener = new InfoEventListener(store);
             Bot.INSTANCE.getPluginManager().registerEvents(this.listener, this);
-            if (!webStarted) {
-                this.webServer = new WebServer(config, store);
-                this.webServer.start();
-                webStarted = true;
-            }
-            setupViaBridge();
-            log.info("InfoManage 已启用");
         } catch (Exception e) {
             log.error("InfoManage 启用失败", e);
         }
+        // 网页服务启动失败不应阻断事件监听与 Via 桥接
+        if (!webStarted) {
+            try {
+                this.webServer = new WebServer(config, store);
+                this.webServer.start();
+                webStarted = true;
+            } catch (Exception e) {
+                log.error("InfoManage 网页服务启动失败", e);
+            }
+        }
+        setupViaBridge();
+        log.info("InfoManage 已启用");
     }
 
     @Override
